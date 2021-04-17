@@ -32,23 +32,23 @@ public:
         --(*this);
         return iterator;                                                        //return the copy
     }
-    Referencetype operator[](int index)
+    Referencetype operator[](int index)                                         //index operator
     {
-        return *(m_ptr+index);
+        return *(m_ptr+index);                                                  //return pointer to the index 
     }
-    Referencetype operator*()
+    Referencetype operator*()                                                   //reference operator overload 
     {
-        return *(m_ptr);
+        return *(m_ptr);                                                        //returns a pointer
     }
-    Pointertype operator->()
+    Pointertype operator->()                                                    //arrow operator overload
     {
         return m_ptr;
     }
-    bool operator==(const Vectoriterator& other) const
+    bool operator==(const Vectoriterator& other) const                          //bool equal operator overload
     {
         return m_ptr==other.m_ptr;
     }
-    bool operator!=(const Vectoriterator& other) const
+    bool operator!=(const Vectoriterator& other) const                          //bool not equal operator overload
     {
         return !(*this==other);
     }
@@ -59,7 +59,7 @@ private:
 template<typename t>
 class Vector{
 public:
-    using Valuetype = t;
+    using Valuetype = t;                                                     //just a reference variable
     using Iterator = Vectoriterator<Vector<t>>;
 
 private:
@@ -133,11 +133,11 @@ public:
 
     size_t size()const {return m_size;}                                          //size function to return size
 
-    Iterator begin()
+    Iterator begin()                                                            //vector start
     {
         return Iterator(m_data);
     }
-    Iterator end()
+    Iterator end()                                                              //vecter end +1
     {
         return Iterator(m_data+m_size);
     }
