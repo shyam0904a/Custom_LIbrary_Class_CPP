@@ -1,7 +1,66 @@
 #pragma once
+#include<cstddef>
+
+template<typename Vector>
+class Vectoriterator{
+
+public:
+    using Valuetype = typename Vector::Valuetype;
+    using Pointertype = Valuetype*;
+    using Referencetype =Valuetype&;
+public:
+    Vectoriterator(Pointertype ptr):m_ptr(ptr){}    
+    Vectoriterator& operator++()                                                //prefix operator increment  
+    {
+        m_ptr++;                                                                //increment operator and return the pointer
+        return *this;
+    }   
+     Vectoriterator operator++(int)                                             //postfix operator increment 
+    {
+        Vectoriterator iterator= *this;                                         //create copy and increment
+        ++(*this);
+        return iterator;                                                        //return the copy
+    }
+    Vectoriterator& operator--()                                                //prefix operator  decrement 
+    {
+        m_ptr--;                                                                //increment operator and return the pointer
+        return *this;
+    }   
+     Vectoriterator operator--(int)                                             //postfix operator decrement
+    {
+        Vectoriterator iterator= *this;                                         //create copy and increment
+        --(*this);
+        return iterator;                                                        //return the copy
+    }
+    Referencetype operator[](int index)
+    {
+        return *(m_ptr+index);
+    }
+    Referencetype operator*()
+    {
+        return *(m_ptr);
+    }
+    Pointertype operator->()
+    {
+        return m_ptr;
+    }
+    bool operator==(const Vectoriterator& other) const
+    {
+        return m_ptr==other.m_ptr;
+    }
+    bool operator!=(const Vectoriterator& other) const
+    {
+        return !(*this==other);
+    }
+private:
+    Pointertype m_ptr;
+};
 
 template<typename t>
-class vector{
+class Vector{
+public:
+    using Valuetype = t;
+    using Iterator = Vectoriterator<Vector<t>>;
 
 private:
     t* m_data = nullptr;
@@ -10,27 +69,29 @@ private:
 private:
     void realloc(size_t newcapacity){                                       //reallocation base with size capacity 2
        
+        t* newblock = (t*)::operator new(newcapacity *sizeof(t));           //create a heap allocated newblock for copying//
+                                                                            
         if(newcapacity<m_size)                                              //check if downsizing the array,if so change the 
             m_size=newcapacity;                                             //m_size to be newcapacity
 
-        t* newblock = (*t)::operator new(newcapacity*sizeof(t));                                 //create a heap allocated newblock for copying//
-                                                                            //with base size of 3//
         for (size_t i=0;i<m_size;i++)                                       //copying the existing data to newblock//                                                 
-            newblock[i]=std::move(m_data[i]);
+            new(&newblock[i]) t(std::move(m_data[i]));
+            
 
         for(size_t i=0;i<m_size;i++)
-            m_data[i].~vector();
+            m_data[i].~t();
+
         ::operator delete(m_data,m_capacity*sizeof(t));
         m_data = newblock;                                                   //delete the old block of memory//
         m_capacity=newcapacity;                                             //set new capacity 
     }
 
 public:
-    vector()
+    Vector()
     {   
         realloc(3);
     }
-    ~vector()
+    ~Vector()
     {
         clear(); 
         delete[] m_data;    
@@ -51,13 +112,13 @@ public:
     void popback(){                                                         //deleting vector items
         if(m_size<0){                                                       //size check 
             m_size--;                                                       //removing size/space
-            m_data[m_size].~vector();                                       //deleting reference to the data
+            m_data[m_size].~Vector();                                       //deleting reference to the data
         }
     }
     void clear(){                                                           //clearing the whole vector storage
         for(size_t i=0;i<m_size;i++)
-            m_data[i].~vector();
-        m_size=o;
+            m_data[i].~t();
+        m_size=0;
     }
     
     template<typename... Args>                                              //instead of constructing a vector
@@ -65,12 +126,21 @@ public:
     {                                                                       //the required by it's own (moving) in this stack
         if(m_size >= m_capacity)                                            //frame instead of the main function stack frame.  
             realloc(m_capacity * 2);
-        new(m_data[m_size])t(std::forward<Args>(args)...);
-        retun m_data[m_size++];
+        new(&m_data[m_size]) t(std::forward<Args>(args)...);
+        return m_data[m_size++];
     }
 
 
     size_t size()const {return m_size;}                                          //size function to return size
+
+    Iterator begin()
+    {
+        return Iterator(m_data);
+    }
+    Iterator end()
+    {
+        return Iterator(m_data+m_size);
+    }
 
     const t& operator[](size_t index) const                            //index operator const version
     {
